@@ -1,6 +1,11 @@
 const graphql = require('graphql');
-let fs = require('fs');
-let fastcsv = require('fast-csv');
+
+// For fast CSV imports
+// let fs = require('fs');
+// let fastcsv = require('fast-csv');
+
+// For calling Micro services via HTTP
+const axios = require('axios');
 
 const {
     GraphQLObjectType,
@@ -9,7 +14,7 @@ const {
     GraphQLList
 } = graphql;
 
-// To walk through data
+// To walk through static data
 const _ = require('lodash');
 
 // Dummy data
@@ -27,28 +32,28 @@ const users = [
 
 // Fast CSV implementation
 
-let readableStreamInput = fs.createReadStream('./schema/test-data/Name.csv');
+// let readableStreamInput = fs.createReadStream('./schema/test-data/Name.csv');
 let users = [];
 
-fastcsv
-    .fromStream(readableStreamInput, {headers: true})
-    .on('data', (data) => {
-        let rowData = {};
-
-        Object.keys(data).forEach(current_key => {
-            rowData[current_key] = data[current_key]
-        });
-
-        users.push(rowData);
-
-    }).on('end', () => {
-    console.log('total rows of table', users.length);
-});
+// fastcsv
+//     .fromStream(readableStreamInput, {headers: true})
+//     .on('data', (data) => {
+//         let rowData = {};
+//
+//         Object.keys(data).forEach(current_key => {
+//             rowData[current_key] = data[current_key]
+//         });
+//
+//         users.push(rowData);
+//
+//     }).on('end', () => {
+//     console.log('total rows of table', users.length);
+// });
 
 const UserType = new GraphQLObjectType({
     name: 'User',
     fields: {
-        Id: { type: GraphQLString },
+        id: { type: GraphQLString },
         FIRST_NAME: { type: GraphQLString },
         CHAPTER: { type: GraphQLString }
     }
@@ -70,7 +75,8 @@ const RootQuery = new GraphQLObjectType({
             type: UserType,
             args: { id: { type: GraphQLString } },
             resolve( parentValue, args ) {
-                return _.find(users, { Id: args.id });
+                return axios.get(`http://localhost:3000/users/${args.id}`)
+                    .then( response => response.data); // Since axios returns response with data key
             }
         },
         users: {
