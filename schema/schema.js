@@ -1,4 +1,6 @@
 const graphql = require('graphql');
+let fs = require('fs');
+let fastcsv = require('fast-csv');
 
 const {
     GraphQLObjectType,
@@ -12,7 +14,7 @@ const _ = require('lodash');
 
 // Dummy data
 
-const users = require('./test-data/users');
+// const users = require('./test-data/users');
 /*
 const users = [
     {
@@ -22,6 +24,26 @@ const users = [
     }
 ];
 */
+
+// Fast CSV implementation
+
+let readableStreamInput = fs.createReadStream('./schema/test-data/Name.csv');
+let users = [];
+
+fastcsv
+    .fromStream(readableStreamInput, {headers: true})
+    .on('data', (data) => {
+        let rowData = {};
+
+        Object.keys(data).forEach(current_key => {
+            rowData[current_key] = data[current_key]
+        });
+
+        users.push(rowData);
+
+    }).on('end', () => {
+    console.log('total rows of table', users.length);
+});
 
 const UserType = new GraphQLObjectType({
     name: 'User',
