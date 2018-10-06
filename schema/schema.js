@@ -12,7 +12,16 @@ const _ = require('lodash');
 
 // Dummy data
 
-const users = require('./test-data/names_export');
+const users = require('./test-data/users');
+/*
+const users = [
+    {
+        Id: '1',
+        FIRST_NAME: 'A Q Khan',
+        CHAPTER: 'i-Intellect Inc.'
+    }
+];
+*/
 
 const UserType = new GraphQLObjectType({
     name: 'User',
