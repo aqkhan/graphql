@@ -1,54 +1,22 @@
 const graphql = require('graphql');
-let fs = require('fs');
-let fastcsv = require('fast-csv');
 
 const {
     GraphQLObjectType,
     GraphQLString,
     GraphQLSchema,
+    GraphQLInt,
     GraphQLList
 } = graphql;
 
 // To walk through data
 const _ = require('lodash');
 
-// Dummy data
-
-// const users = require('./test-data/users');
-/*
-const users = [
-    {
-        Id: '1',
-        FIRST_NAME: 'A Q Khan',
-        CHAPTER: 'i-Intellect Inc.'
-    }
-];
-*/
-
-// Fast CSV implementation
-
-let readableStreamInput = fs.createReadStream('./schema/test-data/Name.csv');
-let users = [];
-
-fastcsv
-    .fromStream(readableStreamInput, {headers: true})
-    .on('data', (data) => {
-        let rowData = {};
-
-        Object.keys(data).forEach(current_key => {
-            rowData[current_key] = data[current_key]
-        });
-
-        users.push(rowData);
-
-    }).on('end', () => {
-    console.log('total rows of table', users.length);
-});
+let users = require('./test-data/name_full');
 
 const UserType = new GraphQLObjectType({
     name: 'User',
     fields: {
-        Id: { type: GraphQLString },
+        Id: { type: GraphQLInt },
         FIRST_NAME: { type: GraphQLString },
         CHAPTER: { type: GraphQLString }
     }
@@ -68,7 +36,7 @@ const RootQuery = new GraphQLObjectType({
     fields: {
         user: {
             type: UserType,
-            args: { id: { type: GraphQLString } },
+            args: { id: { type: GraphQLInt } },
             resolve( parentValue, args ) {
                 return _.find(users, { Id: args.id });
             }
