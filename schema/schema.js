@@ -6,12 +6,24 @@ const {
     GraphQLObjectType,
     GraphQLString,
     GraphQLSchema,
-    GraphQLList,
+    GraphQLList
 } = graphql;
 
 // To walk through data
 const _ = require('lodash');
 
+// Dummy data
+
+// const users = require('./test-data/users');
+/*
+ const users = [
+ {
+ Id: '1',
+ FIRST_NAME: 'A Q Khan',
+ CHAPTER: 'i-Intellect Inc.'
+ }
+ ];
+ */
 
 // Fast CSV implementation
 
@@ -33,38 +45,14 @@ fastcsv
     console.log('total rows of table', users.length);
 });
 
-let readableStreamInput2 = fs.createReadStream('./schema/test-data/cert_register.csv');
-let certs = [];
-
-fastcsv
-    .fromStream(readableStreamInput2, {headers: true})
-    .on('data', (data) => {
-        let rowData = {};
-
-        Object.keys(data).forEach(current_key => {
-            rowData[current_key] = data[current_key]
-        });
-
-        certs.push(rowData);
-
-    }).on('end', () => {
-    console.log('total rows of table certs', certs.length);
-});
-
-
 const UserType = new GraphQLObjectType({
     name: 'User',
-    fields:() => ( {
+    fields: {
         Id: { type: GraphQLString },
         FIRST_NAME: { type: GraphQLString },
-        CHAPTER: { type: GraphQLString },
-        cert_registers: {
-            type: new GraphQLList(Cert_RegisterType),
-            resolve(parent, args){
-                return _.filter(certs, {STUDENT_ID: parent.Id})
-            }
-        }
-    })});
+        CHAPTER: { type: GraphQLString }
+    }
+});
 
 const CompanyType = new GraphQLObjectType({
     name: 'Company',
@@ -74,21 +62,6 @@ const CompanyType = new GraphQLObjectType({
         Id: { type: GraphQLString },
     }
 });
-
-const Cert_RegisterType = new GraphQLObjectType({
-        name: 'cert_register',
-        fields: () => ({
-            SEQN: {type: GraphQLString},
-            STUDENT_ID: {type: GraphQLString},
-            user: {
-                type: UserType,
-                resolve(parent, args){
-                    return _.find(users, {Id: parent.STUDENT_ID})
-                }
-            }
-        })
-    }
-)
 
 const RootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
@@ -106,19 +79,6 @@ const RootQuery = new GraphQLObjectType({
                 return users;
             }
         },
-        certs: {
-            type: new GraphQLList(Cert_RegisterType),
-            resolve() {
-                return certs;
-            }
-        },
-        cert: {
-            type: Cert_RegisterType,
-            args: {SEQN: {type: GraphQLString}},
-            resolve(parent, args){
-                return _.find(certs, {SEQN: args.SEQN})
-            }
-        },
         company: {
             type: CompanyType,
             args: { companyId: { type: GraphQLString } },
@@ -128,7 +88,6 @@ const RootQuery = new GraphQLObjectType({
         }
     }
 });
-
 module.exports = new GraphQLSchema({
     query: RootQuery
 });
