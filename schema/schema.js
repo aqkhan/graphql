@@ -12,15 +12,24 @@ const {
 const _ = require('lodash');
 
 let users = require('./test-data/name_full');
+console.log(`users length: ${users.length}`);
+let certs = require('./test-data/cert_register');
+console.log(`certifications length: ${certs.length}`)
+
 
 const UserType = new GraphQLObjectType({
     name: 'User',
-    fields: {
+    fields:() => ( {
         Id: { type: GraphQLInt },
         FIRST_NAME: { type: GraphQLString },
-        CHAPTER: { type: GraphQLString }
-    }
-});
+        CHAPTER: { type: GraphQLString },
+        cert_registers: {
+            type: new GraphQLList(Cert_RegisterType),
+            resolve(parent, args){
+                return _.filter(certs, {STUDENT_ID: parent.Id})
+            }
+        }
+    })});
 
 const CompanyType = new GraphQLObjectType({
     name: 'Company',
@@ -30,6 +39,21 @@ const CompanyType = new GraphQLObjectType({
         Id: { type: GraphQLString },
     }
 });
+
+const Cert_RegisterType = new GraphQLObjectType({
+        name: 'cert_register',
+        fields: () => ({
+            SEQN: {type: GraphQLInt},
+            STUDENT_ID: {type: GraphQLInt},
+            user: {
+                type: UserType,
+                resolve(parent, args){
+                    return _.find(users, {Id: parent.STUDENT_ID})
+                }
+            }
+        })
+    }
+)
 
 const RootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
@@ -45,6 +69,19 @@ const RootQuery = new GraphQLObjectType({
             type: new GraphQLList(UserType),
             resolve() {
                 return users;
+            }
+        },
+        certs: {
+            type: new GraphQLList(Cert_RegisterType),
+            resolve() {
+                return certs;
+            }
+        },
+        cert: {
+            type: Cert_RegisterType,
+            args: {SEQN: {type: GraphQLInt}},
+            resolve(parent, args){
+                return _.find(certs, {SEQN: args.SEQN})
             }
         },
         company: {
