@@ -1,4 +1,5 @@
 const graphql = require('graphql');
+var mysql      = require('mysql');
 
 const {
     GraphQLObjectType,
@@ -11,7 +12,51 @@ const {
 // To walk through data
 const _ = require('lodash');
 
-let users = require('./test-data/name_full');
+
+
+// my sql connection
+var connection = mysql.createConnection({
+    host     : 'localhost',
+    user     : 'root',
+    password : '',
+    database : 'scte_dashboard'
+});
+
+connection.connect(function(err) {
+    if (err) {
+        console.error('error connecting: ' + err.stack);
+        return;
+    }
+
+    console.log('connected as id ' + connection.threadId);
+});
+var users=[];
+
+const connectDb = new Promise((resolve,reject)=>{
+    connection.query('SELECT * FROM name', function (error, results, fields) {
+        if (error) {
+            console.log(error);
+        }
+        console.log('users length: ', results.length);
+        resolve(results);
+    });
+})
+
+const disconnectDb=()=>{
+    return new Promise((resolve,reject)=>{
+        resolve("connection end");
+    });
+}
+
+
+async function connectAndDesconnectAW() {
+    users = await connectDb;
+    console.log("fetch completed");
+    const disConnectResult= await disconnectDb();
+    console.log(disConnectResult);
+
+}
+connectAndDesconnectAW();
 
 const UserType = new GraphQLObjectType({
     name: 'User',
@@ -56,6 +101,7 @@ const RootQuery = new GraphQLObjectType({
         }
     }
 });
+
 
 module.exports = new GraphQLSchema({
     query: RootQuery
