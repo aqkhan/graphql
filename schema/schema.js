@@ -1,6 +1,7 @@
 const graphql = require('graphql');
-var mysql      = require('mysql');
-
+const mongoose = require('mongoose');
+const users = require('../model/user');
+const certs =require('../model/certification');
 const {
     GraphQLObjectType,
     GraphQLString,
@@ -14,62 +15,22 @@ const _ = require('lodash');
 
 
 
-// my sql connection
-var connection = mysql.createConnection({
-    host     : 'localhost',
-    user     : 'root',
-    password : '',
-    database : 'scte_dashboard'
-});
+// my mongodb connection
 
-connection.connect(function(err) {
-    if (err) {
-        console.error('error connecting: ' + err.stack);
-        return;
-    }
+mongoose.Promise = global.Promise;
 
-    console.log('connected as id ' + connection.threadId);
-});
-var users=[];
-var certs=[];
-const getUsers = new Promise((resolve,reject)=>{
-    connection.query('SELECT * FROM name', function (error, results, fields) {
-        if (error) {
-            console.log(error);
-        }
-        console.log('users length: ', results.length);
-        resolve(results);
+before((done)=>{
+    mongoose.connect('mongodb://localhost/scte-dashboard');
+
+    mongoose.connection.once('open',()=>{
+        console.log("successfully connected")
+        done();
+    }).on('err',(err)=>{
+        console.log(err);
     });
-});
 
-
-const getCerts = new Promise((resolve,reject)=>{
-    connection.query('SELECT * FROM cert_register', function (error, results, fields) {
-        if (error) {
-            console.log(error);
-        }
-        console.log('certss length: ', results.length);
-        resolve(results);
-    });
 })
 
-const disconnectDb=()=>{
-    return new Promise((resolve,reject)=>{
-        resolve("connection end");
-    });
-}
-
-
-async function connectAndDesconnectAW() {
-    users = await getUsers;
-    console.log("Users fetch completed");
-    certs = await getCerts;
-    console.log("Certs fetch completed");
-    const disConnectResult= await disconnectDb();
-    console.log(disConnectResult);
-
-}
-connectAndDesconnectAW();
 
 const UserType = new GraphQLObjectType({
     name: 'User',
@@ -102,7 +63,7 @@ const UserCertType = new GraphQLObjectType({
         cert_registers: {
             type: new GraphQLList(CertUserType),
             resolve(parent, args){
-                return _.filter(certs, {STUDENT_ID: parent.Id})
+                return certs.findById(parent.Id)
             }
         }
     })});
@@ -114,7 +75,7 @@ const CertUserType = new GraphQLObjectType({
             user: {
                 type: UserCertType,
                 resolve(parent, args){
-                    return _.find(users, {Id: parent.STUDENT_ID})
+                    return users.find({Id: parent.STUDENT_ID})
                 }
             }
         })
@@ -128,34 +89,34 @@ const RootQuery = new GraphQLObjectType({
             type: UserType,
             args: { id: { type: GraphQLInt } },
             resolve( parentValue, args ) {
-                return _.find(users, { Id: args.id });
+                return users.find({ Id: args.id });
             }
         },
         users: {
             type: new GraphQLList(UserType),
             resolve() {
-                return users;
+                return users.find({});
             }
         },
-        company: {
-            type: CompanyType,
-            args: { companyId: { type: GraphQLString } },
-            resolve( parentValue, args ) {
-                return _.find( users, { CO_ID: args.companyId } )
-            }
-        },
+        // company: {
+        //     type: CompanyType,
+        //     args: { companyId: { type: GraphQLString } },
+        //     resolve( parentValue, args ) {
+        //         return _.find( users, { CO_ID: args.companyId } )
+        //     }
+        // },
         userCert: {
             type: UserCertType,
             args: { id: { type: GraphQLInt } },
             resolve( parentValue, args ) {
-                return _.find(users, { Id: args.id });
+                return users.find({ Id: args.id });
             }
         },
         certUser: {
             type: CertUserType,
             args: {SEQN: {type: GraphQLInt}},
             resolve(parent, args){
-                return _.find(certs, {SEQN: args.SEQN})
+                return certs.find({SEQN: args.SEQN})
             }
         }
     }
