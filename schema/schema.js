@@ -31,14 +31,7 @@ const UserType = new GraphQLObjectType({
         }
     })});
 
-const CompanyType = new GraphQLObjectType({
-    name: 'Company',
-    fields: {
-        CO_ID: { type: GraphQLString },
-        COMPANY_SORT: { type: GraphQLString },
-        Id: { type: GraphQLString },
-    }
-});
+
 
 const Cert_RegisterType = new GraphQLObjectType({
         name: 'cert_register',
@@ -65,30 +58,12 @@ const RootQuery = new GraphQLObjectType({
                 return _.find(users, { Id: args.id });
             }
         },
-        users: {
-            type: new GraphQLList(UserType),
-            resolve() {
-                return users;
-            }
-        },
-        certs: {
-            type: new GraphQLList(Cert_RegisterType),
-            resolve() {
-                return certs;
-            }
-        },
+
         cert: {
             type: Cert_RegisterType,
             args: {SEQN: {type: GraphQLInt}},
             resolve(parent, args){
                 return _.find(certs, {SEQN: args.SEQN})
-            }
-        },
-        company: {
-            type: CompanyType,
-            args: { companyId: { type: GraphQLString } },
-            resolve( parentValue, args ) {
-                return _.find( users, { CO_ID: args.companyId } )
             }
         }
     }
