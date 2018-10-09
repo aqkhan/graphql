@@ -60,21 +60,34 @@ connectAndDesconnectAW();
 
 const UserType = new GraphQLObjectType({
     name: 'User',
-    fields: {
+    fields:() => ( {
         Id: { type: GraphQLInt },
         FIRST_NAME: { type: GraphQLString },
-        CHAPTER: { type: GraphQLString }
-    }
-});
+        CHAPTER: { type: GraphQLString },
+        cert_registers: {
+            type: new GraphQLList(Cert_RegisterType),
+            resolve(parent, args){
+                return _.filter(certs, {STUDENT_ID: parent.Id})
+            }
+        }
+    })});
 
-const CompanyType = new GraphQLObjectType({
-    name: 'Company',
-    fields: {
-        CO_ID: { type: GraphQLString },
-        COMPANY_SORT: { type: GraphQLString },
-        Id: { type: GraphQLString },
+
+
+const Cert_RegisterType = new GraphQLObjectType({
+        name: 'cert_register',
+        fields: () => ({
+            SEQN: {type: GraphQLInt},
+            STUDENT_ID: {type: GraphQLInt},
+            user: {
+                type: UserType,
+                resolve(parent, args){
+                    return _.find(users, {Id: parent.STUDENT_ID})
+                }
+            }
+        })
     }
-});
+)
 
 const RootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
@@ -86,22 +99,16 @@ const RootQuery = new GraphQLObjectType({
                 return _.find(users, { Id: args.id });
             }
         },
-        users: {
-            type: new GraphQLList(UserType),
-            resolve() {
-                return users;
-            }
-        },
-        company: {
-            type: CompanyType,
-            args: { companyId: { type: GraphQLString } },
-            resolve( parentValue, args ) {
-                return _.find( users, { CO_ID: args.companyId } )
+
+        cert: {
+            type: Cert_RegisterType,
+            args: {SEQN: {type: GraphQLInt}},
+            resolve(parent, args){
+                return _.find(certs, {SEQN: args.SEQN})
             }
         }
     }
 });
-
 
 module.exports = new GraphQLSchema({
     query: RootQuery
