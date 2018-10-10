@@ -2,6 +2,7 @@ const graphql = require('graphql');
 const mongoose = require('mongoose');
 const users = require('../model/user');
 const certs =require('../model/certification');
+const v8 = require('v8');
 const {
     GraphQLObjectType,
     GraphQLString,
@@ -13,23 +14,21 @@ const {
 // To walk through data
 const _ = require('lodash');
 
-
+console.log(v8.getHeapStatistics());
 
 // my mongodb connection
 
 mongoose.Promise = global.Promise;
 
-before((done)=>{
     mongoose.connect('mongodb://localhost/scte-dashboard');
 
     mongoose.connection.once('open',()=>{
         console.log("successfully connected")
-        done();
     }).on('err',(err)=>{
         console.log(err);
     });
 
-})
+
 
 
 const UserType = new GraphQLObjectType({
@@ -89,13 +88,13 @@ const RootQuery = new GraphQLObjectType({
             type: UserType,
             args: { id: { type: GraphQLInt } },
             resolve( parentValue, args ) {
-                return users.find({ Id: args.id });
+                return users.find({Id:args.id});
             }
         },
         users: {
             type: new GraphQLList(UserType),
             resolve() {
-                return users.find({});
+                return users.find({}).limit(20);
             }
         },
         // company: {
