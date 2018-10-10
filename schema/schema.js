@@ -40,14 +40,14 @@ const UserType = new GraphQLObjectType({
     }
 });
 
-const CompanyType = new GraphQLObjectType({
-    name: 'Company',
-    fields: {
-        CO_ID: { type: GraphQLString },
-        COMPANY_SORT: { type: GraphQLString },
-        Id: { type: GraphQLString },
-    }
-});
+// const CompanyType = new GraphQLObjectType({
+//     name: 'Company',
+//     fields: {
+//         CO_ID: { type: GraphQLString },
+//         COMPANY_SORT: { type: GraphQLString },
+//         Id: { type: GraphQLString },
+//     }
+// });
 
 //
 //
@@ -94,7 +94,7 @@ const RootQuery = new GraphQLObjectType({
         users: {
             type: new GraphQLList(UserType),
             resolve() {
-                return users.find({}).limit(20);
+                return users.find({}).limit(10);
             }
         },
         // company: {
